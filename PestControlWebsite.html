@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShieldPest</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+body{margin:0;background:#050508;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+
+/* ─── Constants ─────────────────────────────────────── */
+const BRAND = "ShieldPest";
+const PHONE = "1-800-SHIELD-1";
+const EMAIL = "hello@shieldpest.com";
+const gold = "#e8c97a";
+const darkBg = "#050508";
+
+/* ─── Data ───────────────────────────────────────────── */
+const services = [
+  {
+    icon: "🛏️", name: "Bed Bug Removal", slug: "bed-bug-removal",
+    tagline: "Complete elimination — guaranteed first visit.",
+    desc: "Complete elimination with heat treatment technology. 100% guaranteed results.",
+    hero: "Heat-treatment technology penetrates every crack and crevice, eliminating bed bugs at every life stage — eggs included.",
+    details: [
+      { icon: "🌡️", title: "Thermal Heat Treatment", body: "We raise room temperature to 120–135°F, the lethal range for all bed bug life stages. No chemicals. No prep headaches. Incredibly effective." },
+      { icon: "🔬", title: "K9 Inspection", body: "Our certified bed-bug detection dogs locate infestations with 95%+ accuracy before and after treatment, confirming 100% elimination." },
+      { icon: "💊", title: "Chemical Residual Backup", body: "Where heat is supplemented with targeted chemical treatment, we use Health Canada–approved, low-odor residuals that keep working for weeks." },
+      { icon: "📋", title: "Follow-Up Protocol", body: "We schedule a 2-week and 30-day follow-up inspection at no extra charge to confirm your home stays bed-bug-free." },
+    ],
+    process: ["K9 or visual inspection", "Heat-treatment setup", "6–8 hour thermal treatment", "Post-treatment inspection", "30-day follow-up"],
+    price: "From $349 for a single room",
+    guarantee: "90-day return guarantee",
+    faqs: [
+      { q: "Do I need to leave my home?", a: "Yes — you, pets, and plants should be out for about 6–8 hours during the heat treatment. We'll give you a full prep guide." },
+      { q: "Will heat damage my belongings?", a: "Our technicians protect electronics and heat-sensitive items before treatment. Most furniture and bedding are completely unaffected." },
+      { q: "How many treatments does it take?", a: "In most cases, a single heat treatment eliminates the entire infestation. Chemical backup treatments may require 2 visits for severe cases." },
+    ],
+  },
+  {
+    icon: "🐭", name: "Rodent Control", slug: "rodent-control",
+    tagline: "Seal. Trap. Eliminate. Prevent.",
+    desc: "Comprehensive rodent-proofing and elimination for lasting protection.",
+    hero: "We don't just trap mice — we find how they're getting in and seal every entry point so they never return.",
+    details: [
+      { icon: "🔍", title: "Full Property Audit", body: "Technicians inspect your entire structure for entry points, nesting sites, and food sources — inside and out." },
+      { icon: "🚧", title: "Exclusion & Sealing", body: "We seal gaps, cracks, and holes with rodent-proof materials (steel wool, hardware cloth, foam) to prevent re-entry permanently." },
+      { icon: "🪤", title: "Trapping & Bait Stations", body: "Strategically placed tamper-resistant bait stations and traps eliminate the existing population quickly and safely." },
+      { icon: "📅", title: "Monitoring Program", body: "Optional quarterly visits keep your property protected year-round with inspections and bait station refills." },
+    ],
+    process: ["Property inspection", "Exclusion sealing", "Trap/bait placement", "Population elimination", "Follow-up & monitoring"],
+    price: "From $249 for residential",
+    guarantee: "6-month re-entry guarantee",
+    faqs: [
+      { q: "How long does it take to eliminate rodents?", a: "Most infestations are resolved within 1–2 weeks. Severe cases may take up to 4 weeks with ongoing trapping." },
+      { q: "Is bait safe around children and pets?", a: "All bait stations are tamper-resistant and placed in locations inaccessible to children and pets. We use the safest formulations available." },
+      { q: "What if rodents come back?", a: "If rodents return within our 6-month guarantee period, we come back and treat again at zero cost." },
+    ],
+  },
+  {
+    icon: "🪳", name: "Cockroach Treatment", slug: "cockroach-treatment",
+    tagline: "Colony-level elimination. No survivors.",
+    desc: "Advanced gel bait and residual treatments that target entire colonies.",
+    hero: "Cockroaches are resilient — that's why we use multiple treatment methods that work together to wipe out entire colonies, not just visible insects.",
+    details: [
+      { icon: "💉", title: "Gel Bait Application", body: "Professional-grade gel baits are applied in key harborage areas. Cockroaches carry the bait back to the nest, eliminating the colony from within." },
+      { icon: "💨", title: "Residual Insecticide", body: "Targeted spray treatments in cracks, crevices, and voids create a lasting barrier that kills on contact for weeks after treatment." },
+      { icon: "🌫️", title: "Insect Growth Regulator", body: "IGR breaks the reproductive cycle by preventing nymphs from reaching breeding age — stopping the infestation from rebounding." },
+      { icon: "🔄", title: "2-Visit Protocol", body: "We schedule a second visit 3–4 weeks later to treat any eggs that hatched after the first treatment, ensuring complete elimination." },
+    ],
+    process: ["Inspection & species ID", "Gel bait placement", "Residual spray treatment", "IGR application", "Follow-up at 3–4 weeks"],
+    price: "From $199 for apartment",
+    guarantee: "60-day guarantee",
+    faqs: [
+      { q: "Why do I need two treatments?", a: "Cockroach eggs are resistant to most insecticides. The second visit targets newly hatched nymphs before they can reproduce." },
+      { q: "How long after treatment can I re-enter?", a: "Generally 2–4 hours. Gel baits are odorless and dry quickly. We'll advise you specifically based on products used." },
+      { q: "Do cockroaches come from neighbors?", a: "In condos and apartments, yes — they travel through shared walls and plumbing. We treat your unit thoroughly and can advise on building-wide programs." },
+    ],
+  },
+  {
+    icon: "🐜", name: "Ant Control", slug: "ant-control",
+    tagline: "From trail to queen — total colony elimination.",
+    desc: "Colony-level extermination with barrier protection for your property.",
+    hero: "Killing the ants you can see solves nothing. Our treatments reach the queen deep inside the colony, collapsing the entire population.",
+    details: [
+      { icon: "🎯", title: "Species Identification", body: "Carpenter ants, pavement ants, pharaoh ants — each requires a different strategy. We identify the species first for maximum effectiveness." },
+      { icon: "🍯", title: "Slow-Acting Bait", body: "Workers carry our slow-release bait back to the colony, sharing it with larvae and the queen. The entire colony dies within 1–2 weeks." },
+      { icon: "🏠", title: "Perimeter Barrier", body: "Liquid residual treatments along the foundation, entry points, and landscaping create a protective zone that keeps ants out." },
+      { icon: "🔧", title: "Structural Assessment", body: "Carpenter ant damage is often a sign of moisture issues. We identify contributing factors and advise on prevention." },
+    ],
+    process: ["Species identification", "Interior bait placement", "Exterior perimeter barrier", "Entry point sealing", "30-day follow-up"],
+    price: "From $179 for residential",
+    guarantee: "30-day guarantee",
+    faqs: [
+      { q: "Why are ants coming back after I spray?", a: "Store-bought sprays kill foragers but not the colony. Our baiting approach reaches the queen — the only way to permanently stop an ant problem." },
+      { q: "Are carpenter ants dangerous?", a: "They don't sting, but they excavate wood for nesting, causing structural damage over time. Early treatment prevents costly repairs." },
+      { q: "When is ant season?", a: "Ants are most active spring through fall, but heated homes can harbor colonies year-round. We treat any time of year." },
+    ],
+  },
+  {
+    icon: "🐝", name: "Wasp Removal", slug: "wasp-removal",
+    tagline: "Same-day nest removal. Safe & guaranteed.",
+    desc: "Safe, rapid nest removal by certified technicians. Same-day available.",
+    hero: "Wasp nests grow fast and become dangerous quickly. Our certified technicians remove nests safely — often within hours of your call.",
+    details: [
+      { icon: "⚡", title: "Same-Day Response", body: "We prioritize wasp calls because nests double in size every few days. We dispatch a technician within hours, not days." },
+      { icon: "🛡️", title: "Full Protective Gear", body: "Our technicians use professional-grade bee suits and respirators, allowing safe treatment of even the most aggressive colonies." },
+      { icon: "💀", title: "Nest Elimination", body: "We treat the nest with fast-acting insecticide, wait for complete activity to cease, then physically remove the nest to prevent future use." },
+      { icon: "🔍", title: "Secondary Nest Check", body: "Properties often have multiple nests. We inspect the full exterior during every visit and treat any additional nests found at no extra charge." },
+    ],
+    process: ["Emergency dispatch", "Full property inspection", "Nest treatment", "Nest physical removal", "Entry point sealing"],
+    price: "From $149 per nest",
+    guarantee: "Season-long return policy",
+    faqs: [
+      { q: "Is it safe to remove a wasp nest myself?", a: "We strongly advise against it. Disturbing a nest without proper protection can trigger mass stinging that sends people to hospital. Always call a professional." },
+      { q: "When is the best time to treat a wasp nest?", a: "Early morning or evening when wasps are least active. Our technicians time treatments accordingly for safety." },
+      { q: "Will the wasps rebuild?", a: "Wasps don't reuse a removed nest. Our season-long guarantee means if a new colony starts at the same location, we return at no charge." },
+    ],
+  },
+  {
+    icon: "🦝", name: "Wildlife Removal", slug: "wildlife-removal",
+    tagline: "Humane removal. Permanent exclusion.",
+    desc: "Humane removal and exclusion for raccoons, squirrels, and more.",
+    hero: "Wildlife in your attic or walls causes serious structural damage. We remove animals humanely and seal your property so they can't return.",
+    details: [
+      { icon: "🤝", title: "Humane Trapping", body: "We use live traps and one-way exclusion devices that allow animals to exit but not re-enter. All methods comply with Ontario wildlife regulations." },
+      { icon: "🏠", title: "Attic Restoration", body: "After removal, we assess insulation damage, clean up droppings, and advise on full attic restoration to remove health hazards and odors." },
+      { icon: "🔒", title: "Full Exclusion", body: "Every entry point — soffits, vents, fascia, roof lines — is sealed with heavy-gauge steel mesh that animals can't chew through." },
+      { icon: "👶", title: "Baby Season Protocol", body: "Spring baby season requires special care. We reunite mothers with young before exclusion to prevent animals dying inside walls." },
+    ],
+    process: ["Wildlife inspection", "Humane trap/exclusion setup", "Animal removal", "Full property exclusion", "Attic assessment"],
+    price: "From $299 per animal type",
+    guarantee: "2-year exclusion guarantee",
+    faqs: [
+      { q: "What animals do you remove?", a: "Raccoons, squirrels, skunks, opossums, birds, bats (with MNRF compliance), and more. We handle the full range of urban wildlife." },
+      { q: "Is wildlife removal humane?", a: "Absolutely. We follow Ontario's Fish and Wildlife Conservation Act and use methods that protect the animals while resolving your problem." },
+      { q: "How did wildlife get into my attic?", a: "Raccoons and squirrels are strong and persistent. They exploit gaps in soffits, roof vents, fascia boards, and plumbing stacks. Our exclusion closes all of these." },
+    ],
+  },
+  {
+    icon: "🏢", name: "Commercial Pest Control", slug: "commercial-pest-control",
+    tagline: "IPM programs for compliant, pest-free businesses.",
+    desc: "Tailored IPM programs for restaurants, offices, and retail spaces.",
+    hero: "A single pest sighting can destroy customer trust and trigger health inspections. Our commercial IPM programs give businesses a proactive, fully documented defense.",
+    details: [
+      { icon: "📊", title: "Integrated Pest Management", body: "We design a full IPM program — inspection, monitoring, treatment, prevention — customized to your facility type and risk profile." },
+      { icon: "📋", title: "Service Documentation", body: "Every visit is documented with detailed service reports. Perfect for health inspections, food safety audits, and regulatory compliance." },
+      { icon: "🚨", title: "Emergency Priority Response", body: "Commercial clients get priority dispatch — we aim to be on-site within 2 hours for urgent pest activity that can't wait." },
+      { icon: "👨‍🏫", title: "Staff Training", body: "We train your team to identify early warning signs, maintain sanitation standards, and respond correctly to pest activity." },
+    ],
+    process: ["Facility risk assessment", "Custom IPM plan design", "Initial treatment", "Monthly monitoring visits", "Compliance reporting"],
+    price: "Custom quote — call for assessment",
+    guarantee: "Ongoing service guarantee",
+    faqs: [
+      { q: "How often do you visit commercial properties?", a: "Most food-service clients receive monthly or bi-monthly visits. Office and retail properties may need quarterly service. We tailor the schedule to your risk level." },
+      { q: "Do you serve restaurants?", a: "Restaurants are our specialty. We understand health code requirements and design programs that keep you compliant and passing inspections." },
+      { q: "Can you help after a failed health inspection?", a: "Yes — we offer emergency remediation services to resolve pest issues quickly and provide documentation for your re-inspection." },
+    ],
+  },
+  {
+    icon: "🛡️", name: "Preventive Protection", slug: "preventive-protection",
+    tagline: "Stop pests before they start.",
+    desc: "Quarterly maintenance plans to keep pests out year-round.",
+    hero: "Prevention is infinitely cheaper than treatment. Our quarterly maintenance plans create a year-round protective barrier around your property.",
+    details: [
+      { icon: "🗓️", title: "Quarterly Visits", body: "Four scheduled visits per year timed to seasonal pest pressures — spring (ants, wasps), summer (mosquitoes), fall (rodents), winter (overwintering pests)." },
+      { icon: "🔄", title: "Perimeter Barrier Renewal", body: "Each visit refreshes the exterior barrier treatment, maintaining continuous protection as products break down naturally over time." },
+      { icon: "🔍", title: "Proactive Inspection", body: "Technicians inspect for new entry points, pest activity, and conducive conditions every visit — catching problems before they become infestations." },
+      { icon: "💰", title: "Priority Pricing", body: "Plan members receive discounted rates on any additional treatments needed and get priority scheduling over non-plan customers." },
+    ],
+    process: ["Initial baseline treatment", "Q1 spring service", "Q2 summer service", "Q3 fall rodent-proofing", "Q4 winter inspection"],
+    price: "From $99/quarter (4 visits/year)",
+    guarantee: "Free treatments between scheduled visits",
+    faqs: [
+      { q: "What does the plan cover?", a: "All four scheduled visits plus free return visits for any pest activity that occurs between them. Your home is always protected." },
+      { q: "Can I cancel anytime?", a: "Yes, with 30 days notice. We don't lock you into long-term contracts — we earn your continued business with results." },
+      { q: "Do I need a plan if I've never had pests?", a: "That's exactly who benefits most. Prevention is far cheaper than reactive treatment, and a protected home is a stress-free home." },
+    ],
+  },
+];
+
+const features = [
+  { icon: "⚡", title: "Same-Day Service", desc: "Emergency dispatch available within hours of your call." },
+  { icon: "🎓", title: "Licensed Technicians", desc: "All staff are provincially certified and background-checked." },
+  { icon: "🌿", title: "Eco-Friendly Treatments", desc: "Family and pet-safe products that protect your loved ones." },
+  { icon: "✅", title: "Guaranteed Results", desc: "We return at no charge until the problem is fully resolved." },
+  { icon: "💰", title: "Transparent Pricing", desc: "Upfront quotes with no hidden fees. Ever." },
+  { icon: "📞", title: "24/7 Emergency Support", desc: "A real technician answers your call around the clock." },
+];
+
+const testimonials = [
+  { name: "Sarah M.", location: "North York", rating: 5, text: "ShieldPest resolved a severe bed bug infestation in one visit. The technician was professional, thorough, and incredibly knowledgeable. Worth every penny.", avatar: "SM" },
+  { name: "James K.", location: "Scarborough", rating: 5, text: "Called at 9pm on a Sunday about a wasp nest over my daughter's bedroom window. They were there by 8am next morning. Absolutely outstanding service.", avatar: "JK" },
+  { name: "Priya R.", location: "Mississauga", rating: 5, text: "After 3 other companies failed to fix our rodent issue, ShieldPest did a full exclusion and we haven't seen a single mouse since. Incredible team.", avatar: "PR" },
+  { name: "David L.", location: "Etobicoke", rating: 5, text: "The commercial program for our restaurant has been flawless. We passed our health inspection with zero issues. Highly recommend for any food service business.", avatar: "DL" },
+  { name: "Chen W.", location: "Markham", rating: 5, text: "Super impressed with how clean and careful they were. Explained everything before they did it. My family felt completely safe throughout the process.", avatar: "CW" },
+];
+
+const faqs = [
+  { q: "How quickly can you respond?", a: "We offer same-day service for most pest issues, and emergency 24/7 response for urgent situations like wasp nests or large infestations. Call us and we'll give you an accurate ETA immediately." },
+  { q: "Are your treatments safe for children and pets?", a: "Absolutely. We use Health Canada–approved, eco-conscious products. Our technicians will advise you on any brief precautionary waiting periods before re-entering treated areas." },
+  { q: "Do you offer a guarantee?", a: "Yes — all our treatments come with a satisfaction guarantee. If the pest problem returns within the warranty period, we come back at zero additional cost." },
+  { q: "How much does pest control cost?", a: "Pricing depends on the pest type, property size, and severity. We provide free, no-obligation inspections and transparent written quotes before any work begins." },
+  { q: "What areas do you service?", a: "We cover the entire Greater Toronto Area including Toronto, Mississauga, Brampton, Markham, Vaughan, Pickering, Ajax, and surrounding communities." },
+  { q: "How do I prepare for a treatment?", a: "We'll send you a tailored prep checklist after booking. Generally this involves clearing access to affected areas and temporarily relocating pets. We make it as easy as possible." },
+];
+
+const stats = [
+  { value: 4800, suffix: "+", label: "5-Star Reviews" },
+  { value: 98, suffix: "%", label: "Satisfaction Rate" },
+  { value: 15, suffix: "+", label: "Years Experience" },
+  { value: 12000, suffix: "+", label: "Properties Served" },
+];
+
+/* ─── Shared Components ──────────────────────────────── */
+function useCountUp(target, duration = 2000, start = false) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!start) return;
+    let startTime = null;
+    const step = (ts) => {
+      if (!startTime) startTime = ts;
+      const p = Math.min((ts - startTime) / duration, 1);
+      setCount(Math.floor(p * target));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target, duration, start]);
+  return count;
+}
+
+function Nav({ navigate, currentPage }) {
+  return (
+    <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(5,5,8,0.88)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "1rem 1.5rem" }}>
+      <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <button onClick={() => navigate("home")} style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.5rem", fontWeight: 800, color: gold, background: "none", border: "none", cursor: "pointer", padding: 0 }}>{BRAND}</button>
+        <div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
+          {["Services", "About", "Reviews", "FAQ"].map(item => (
+            <button key={item} onClick={() => navigate("home", item.toLowerCase())} style={{ color: "#9ca3af", background: "none", border: "none", fontSize: "0.9rem", fontWeight: 500, cursor: "pointer", transition: "color 0.2s" }}
+              onMouseEnter={e => e.target.style.color = gold} onMouseLeave={e => e.target.style.color = "#9ca3af"}
+            >{item}</button>
+          ))}
+          <a href={`tel:${PHONE}`} style={{ background: `linear-gradient(135deg, ${gold}, #c4a855)`, color: "#0a0a0a", padding: "0.6rem 1.25rem", borderRadius: "8px", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none" }}>
+            {PHONE}
+          </a>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function FloatingButtons({ navigate }) {
+  return (
+    <div style={{ position: "fixed", bottom: "2rem", right: "1.5rem", zIndex: 100, display: "flex", flexDirection: "column", gap: "0.75rem", alignItems: "flex-end" }}>
+      <a href={`tel:${PHONE}`} style={{ background: `linear-gradient(135deg, ${gold}, #c4a855)`, color: "#0a0a0a", padding: "0.85rem 1.5rem", borderRadius: "50px", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none", boxShadow: `0 8px 32px rgba(232,201,122,0.4)`, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        📞 Call Now
+      </a>
+      <button onClick={() => navigate("home", "lead-form")} style={{ background: "#0f0f14", border: `1px solid ${gold}`, color: gold, padding: "0.85rem 1.5rem", borderRadius: "50px", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }}>
+        Free Quote
+      </button>
+    </div>
+  );
+}
+
+function FAQItem({ q, a }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+      <button onClick={() => setOpen(!open)} style={{ width: "100%", textAlign: "left", background: "none", border: "none", padding: "1.5rem 0", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", color: "#f9fafb", fontSize: "1rem", fontWeight: 600 }}>
+        {q}
+        <span style={{ color: gold, fontSize: "1.4rem", transition: "transform 0.3s", transform: open ? "rotate(45deg)" : "none", flexShrink: 0, marginLeft: "1rem" }}>+</span>
+      </button>
+      <div style={{ maxHeight: open ? "300px" : "0", overflow: "hidden", transition: "max-height 0.4s ease" }}>
+        <p style={{ color: "#9ca3af", lineHeight: 1.8, paddingBottom: "1.5rem", fontSize: "0.95rem" }}>{a}</p>
+      </div>
+    </div>
+  );
+}
+
+function TestimonialCard({ name, location, rating, text, avatar }) {
+  return (
+    <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "2rem", minWidth: "340px", maxWidth: "380px", flexShrink: 0 }}>
+      <div style={{ display: "flex", gap: "4px", marginBottom: "1rem" }}>
+        {Array(rating).fill(0).map((_, i) => <span key={i} style={{ color: gold, fontSize: "1rem" }}>★</span>)}
+      </div>
+      <p style={{ color: "#d1d5db", lineHeight: 1.8, fontSize: "0.95rem", marginBottom: "1.5rem", fontStyle: "italic" }}>"{text}"</p>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: `linear-gradient(135deg, ${gold}, #c4a855)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.85rem", color: "#0a0a0a" }}>{avatar}</div>
+        <div>
+          <div style={{ color: "#f9fafb", fontWeight: 700, fontSize: "0.95rem" }}>{name}</div>
+          <div style={{ color: "#6b7280", fontSize: "0.8rem" }}>{location}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LeadForm() {
+  const [formData, setFormData] = useState({ name: "", phone: "", email: "", pest: "", property: "" });
+  const [submitted, setSubmitted] = useState(false);
+  const handleSubmit = (e) => { e.preventDefault(); setSubmitted(true); };
+  return (
+    <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(232,201,122,0.2)", borderRadius: "24px", padding: "clamp(1.5rem, 4vw, 3rem)" }}>
+      {submitted ? (
+        <div style={{ textAlign: "center", padding: "2rem" }}>
+          <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>✅</div>
+          <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.75rem", color: "#f9fafb", marginBottom: "1rem" }}>Request Received!</h3>
+          <p style={{ color: "#9ca3af" }}>A technician will call you within 60 minutes. For immediate help: <a href={`tel:${PHONE}`} style={{ color: gold, fontWeight: 700 }}>{PHONE}</a></p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+          {[
+            { label: "Full Name", key: "name", type: "text", placeholder: "John Smith", col: 1 },
+            { label: "Phone Number", key: "phone", type: "tel", placeholder: "(416) 555-0100", col: 1 },
+            { label: "Email Address", key: "email", type: "email", placeholder: "john@email.com", col: 2 },
+          ].map(f => (
+            <div key={f.key} style={{ gridColumn: f.col }}>
+              <label style={{ display: "block", color: "#9ca3af", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.5rem" }}>{f.label}</label>
+              <input type={f.type} placeholder={f.placeholder} value={formData[f.key]} onChange={e => setFormData({ ...formData, [f.key]: e.target.value })}
+                style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "0.85rem 1rem", color: "#f9fafb", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" }} />
+            </div>
+          ))}
+          <div>
+            <label style={{ display: "block", color: "#9ca3af", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.5rem" }}>Pest Problem</label>
+            <select value={formData.pest} onChange={e => setFormData({ ...formData, pest: e.target.value })} style={{ width: "100%", background: "#0f0f14", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "0.85rem 1rem", color: formData.pest ? "#f9fafb" : "#6b7280", fontSize: "0.95rem", outline: "none" }}>
+              <option value="">Select pest type...</option>
+              {services.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ display: "block", color: "#9ca3af", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.5rem" }}>Property Type</label>
+            <select value={formData.property} onChange={e => setFormData({ ...formData, property: e.target.value })} style={{ width: "100%", background: "#0f0f14", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "0.85rem 1rem", color: formData.property ? "#f9fafb" : "#6b7280", fontSize: "0.95rem", outline: "none" }}>
+              <option value="">Select property type...</option>
+              {["Residential Home", "Condo / Apartment", "Commercial Office", "Restaurant / Food Service", "Retail Store", "Other"].map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+          <div style={{ gridColumn: "1 / -1" }}>
+            <button type="submit" style={{ width: "100%", background: `linear-gradient(135deg, ${gold}, #c4a855)`, color: "#0a0a0a", padding: "1.1rem", borderRadius: "12px", fontWeight: 700, fontSize: "1.05rem", border: "none", cursor: "pointer", boxShadow: `0 8px 32px rgba(232,201,122,0.35)` }}>
+              Request Free Inspection →
+            </button>
+            <p style={{ textAlign: "center", color: "#6b7280", fontSize: "0.8rem", marginTop: "1rem" }}>🔒 Your information is 100% private. We never share your data.</p>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
+/* ─── SERVICE DETAIL PAGE ────────────────────────────── */
+function ServicePage({ service, navigate }) {
+  const sec = { padding: "5rem 1.5rem", maxWidth: "1100px", margin: "0 auto" };
+  useEffect(() => { window.scrollTo(0, 0); }, [service.slug]);
+
+  return (
+    <div style={{ background: darkBg, color: "#f9fafb", fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif", minHeight: "100vh" }}>
+      <style>{`@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}`}</style>
+
+      {/* Breadcrumb */}
+      <div style={{ padding: "1.25rem 1.5rem", maxWidth: "1100px", margin: "0 auto", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "#6b7280" }}>
+        <button onClick={() => navigate("home")} style={{ background: "none", border: "none", color: "#6b7280", cursor: "pointer", padding: 0 }}>Home</button>
+        <span>›</span>
+        <button onClick={() => navigate("home", "services")} style={{ background: "none", border: "none", color: "#6b7280", cursor: "pointer", padding: 0 }}>Services</button>
+        <span>›</span>
+        <span style={{ color: gold }}>{service.name}</span>
+      </div>
+
+      {/* HERO */}
+      <section style={{ position: "relative", padding: "4rem 1.5rem 6rem", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(232,201,122,0.07) 0%, transparent 70%)" }} />
+        <div style={{ maxWidth: "900px", margin: "0 auto", textAlign: "center", position: "relative", zIndex: 1 }}>
+          <div style={{ fontSize: "5rem", marginBottom: "1.5rem", animation: "float 3s ease-in-out infinite" }}>{service.icon}</div>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(232,201,122,0.1)", border: "1px solid rgba(232,201,122,0.3)", borderRadius: "50px", padding: "0.4rem 1rem", marginBottom: "1.5rem", fontSize: "0.8rem", color: gold, fontWeight: 600 }}>
+            {service.tagline}
+          </div>
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, color: "#f9fafb", marginBottom: "1.5rem", lineHeight: 1.1 }}>
+            {service.name}
+          </h1>
+          <p style={{ fontSize: "1.15rem", color: "#9ca3af", lineHeight: 1.8, maxWidth: "680px", margin: "0 auto 2.5rem" }}>{service.hero}</p>
+          <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+            <button onClick={() => document.getElementById("service-form")?.scrollIntoView({ behavior: "smooth" })} style={{ background: `linear-gradient(135deg, ${gold}, #c4a855)`, color: "#0a0a0a", padding: "1rem 2rem", borderRadius: "12px", fontWeight: 700, fontSize: "1rem", border: "none", cursor: "pointer", boxShadow: `0 8px 32px rgba(232,201,122,0.35)` }}>
+              Get Free Inspection →
+            </button>
+            <a href={`tel:${PHONE}`} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", color: "#f9fafb", padding: "1rem 2rem", borderRadius: "12px", fontWeight: 700, fontSize: "1rem", textDecoration: "none" }}>
+              📞 Call Now
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* QUICK FACTS BAR */}
+      <div style={{ background: "rgba(232,201,122,0.05)", borderTop: "1px solid rgba(232,201,122,0.1)", borderBottom: "1px solid rgba(232,201,122,0.1)", padding: "1.5rem" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", display: "flex", flexWrap: "wrap", gap: "2rem", justifyContent: "center" }}>
+          {[{ icon: "💰", label: "Pricing", val: service.price }, { icon: "✅", label: "Guarantee", val: service.guarantee }, { icon: "⚡", label: "Response", val: "Same-day available" }, { icon: "📞", label: "Contact", val: PHONE }].map(f => (
+            <div key={f.label} style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <span style={{ fontSize: "1.5rem" }}>{f.icon}</span>
+              <div>
+                <div style={{ fontSize: "0.75rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>{f.label}</div>
+                <div style={{ fontSize: "0.95rem", color: "#f9fafb", fontWeight: 600 }}>{f.val}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* TREATMENT DETAILS */}
+      <section style={{ ...sec }}>
+        <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
+          <div style={{ color: gold, fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>Our Approach</div>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.75rem, 3.5vw, 2.75rem)", fontWeight: 800, color: "#f9fafb" }}>How We Eliminate {service.name.split(" ")[0]}s</h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
+          {service.details.map((d, i) => (
+            <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "2rem" }}>
+              <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>{d.icon}</div>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, color: "#f9fafb", fontSize: "1.1rem", marginBottom: "0.75rem" }}>{d.title}</h3>
+              <p style={{ color: "#9ca3af", fontSize: "0.9rem", lineHeight: 1.8 }}>{d.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* PROCESS TIMELINE */}
+      <section style={{ background: "rgba(255,255,255,0.015)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ ...sec }}>
+          <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
+            <div style={{ color: gold, fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>Step by Step</div>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.75rem, 3.5vw, 2.75rem)", fontWeight: 800, color: "#f9fafb" }}>Our Treatment Process</h2>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+            {service.process.map((step, i) => (
+              <div key={i} style={{ display: "flex", gap: "2rem", alignItems: "flex-start", paddingBottom: i < service.process.length - 1 ? "2rem" : 0, position: "relative" }}>
+                {i < service.process.length - 1 && <div style={{ position: "absolute", left: "23px", top: "48px", width: "2px", height: "calc(100% - 16px)", background: "rgba(232,201,122,0.2)" }} />}
+                <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: "rgba(232,201,122,0.1)", border: `2px solid ${gold}`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: gold, flexShrink: 0, fontSize: "0.95rem" }}>{i + 1}</div>
+                <div style={{ paddingTop: "0.6rem" }}>
+                  <p style={{ color: "#f9fafb", fontWeight: 600, fontSize: "1rem" }}>{step}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SERVICE-SPECIFIC FAQS */}
+      <section style={{ ...sec, maxWidth: "800px" }}>
+        <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
+          <div style={{ color: gold, fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>FAQ</div>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.75rem, 3.5vw, 2.75rem)", fontWeight: 800, color: "#f9fafb" }}>Common Questions</h2>
+        </div>
+        {service.faqs.map(f => <FAQItem key={f.q} {...f} />)}
+      </section>
+
+      {/* OTHER SERVICES */}
+      <section style={{ background: "rgba(255,255,255,0.015)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ ...sec }}>
+          <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", fontWeight: 800, color: "#f9fafb" }}>Other Services</h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
+            {services.filter(s => s.slug !== service.slug).map(s => (
+              <button key={s.slug} onClick={() => navigate("service", null, s.slug)} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", padding: "1.25rem", textAlign: "left", cursor: "pointer", transition: "all 0.25s", display: "flex", alignItems: "center", gap: "1rem" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(232,201,122,0.4)"; e.currentTarget.style.background = "rgba(232,201,122,0.05)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}>
+                <span style={{ fontSize: "1.75rem" }}>{s.icon}</span>
+                <div>
+                  <div style={{ color: "#f9fafb", fontWeight: 700, fontSize: "0.95rem" }}>{s.name}</div>
+                  <div style={{ color: gold, fontSize: "0.8rem", marginTop: "2px" }}>Learn More →</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* LEAD FORM */}
+      <section id="service-form" style={{ ...sec, maxWidth: "720px" }}>
+        <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+          <div style={{ color: gold, fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>Get Started</div>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.75rem, 3.5vw, 2.75rem)", fontWeight: 800, color: "#f9fafb", marginBottom: "1rem" }}>Book Your Free {service.name} Inspection</h2>
+          <p style={{ color: "#9ca3af", lineHeight: 1.7 }}>No obligation. A certified technician will contact you within 60 minutes.</p>
+        </div>
+        <LeadForm />
+      </section>
+
+      {/* MINI FOOTER */}
+      <footer style={{ background: "#030305", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "2rem 1.5rem", textAlign: "center" }}>
+        <div style={{ color: gold, fontFamily: "'Playfair Display', serif", fontSize: "1.5rem", fontWeight: 800, marginBottom: "0.75rem" }}>{BRAND}</div>
+        <div style={{ color: "#6b7280", fontSize: "0.9rem", marginBottom: "1rem" }}>📞 {PHONE} · ✉️ {EMAIL} · 24/7 Emergency Service</div>
+        <button onClick={() => navigate("home")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.1)", color: "#9ca3af", padding: "0.6rem 1.5rem", borderRadius: "8px", cursor: "pointer", fontSize: "0.9rem" }}>
+          ← Back to Home
+        </button>
+      </footer>
+    </div>
+  );
+}
+
+/* ─── HOME PAGE ──────────────────────────────────────── */
+function HomePage({ navigate }) {
+  const [statsVisible, setStatsVisible] = useState(false);
+  const [showExitPopup, setShowExitPopup] = useState(false);
+  const statsRef = useRef(null);
+  const carouselRef = useRef(null);
+  const sectionStyle = { padding: "6rem 1.5rem", maxWidth: "1200px", margin: "0 auto" };
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setStatsVisible(true); }, { threshold: 0.3 });
+    if (statsRef.current) obs.observe(statsRef.current);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const h = (e) => { if (e.clientY <= 0) { setShowExitPopup(true); document.removeEventListener("mouseleave", h); } };
+      document.addEventListener("mouseleave", h);
+      return () => document.removeEventListener("mouseleave", h);
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    let pos = 0;
+    let raf;
+    const animate = () => { pos += 0.5; if (pos >= el.scrollWidth / 2) pos = 0; el.scrollLeft = pos; raf = requestAnimationFrame(animate); };
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+      `}</style>
+
+      {/* EXIT POPUP */}
+      {showExitPopup && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "#0f0f14", border: "1px solid rgba(232,201,122,0.3)", borderRadius: "24px", padding: "3rem", maxWidth: "480px", width: "100%", textAlign: "center", position: "relative" }}>
+            <button onClick={() => setShowExitPopup(false)} style={{ position: "absolute", top: "1rem", right: "1.25rem", background: "none", border: "none", color: "#6b7280", fontSize: "1.5rem", cursor: "pointer" }}>×</button>
+            <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🛡️</div>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.75rem", color: "#f9fafb", marginBottom: "0.75rem" }}>Wait — Don't Leave With Pests!</h2>
+            <p style={{ color: "#9ca3af", marginBottom: "2rem", lineHeight: 1.7 }}>Get a <strong style={{ color: gold }}>FREE inspection</strong> today. No obligation.</p>
+            <a href={`tel:${PHONE}`} style={{ display: "block", background: `linear-gradient(135deg, ${gold}, #c4a855)`, color: "#0a0a0a", padding: "1rem 2rem", borderRadius: "12px", fontWeight: 700, fontSize: "1.1rem", textDecoration: "none", marginBottom: "0.75rem" }}>📞 Call Now — It's Free</a>
+            <button onClick={() => setShowExitPopup(false)} style={{ background: "none", border: "none", color: "#6b7280", cursor: "pointer", fontSize: "0.9rem" }}>No thanks, I'll deal with pests myself</button>
+          </div>
+        </div>
+      )}
+
+      {/* HERO */}
+      <section style={{ position: "relative", minHeight: "92vh", display: "flex", alignItems: "center", overflow: "hidden", padding: "0 1.5rem" }}>
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 80% 60% at 60% 50%, rgba(232,201,122,0.07) 0%, transparent 70%)" }} />
+        <div style={{ maxWidth: "1200px", margin: "0 auto", width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem", alignItems: "center" }}>
+          <div style={{ zIndex: 1 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(232,201,122,0.1)", border: "1px solid rgba(232,201,122,0.3)", borderRadius: "50px", padding: "0.4rem 1rem", marginBottom: "2rem", fontSize: "0.8rem", color: gold, fontWeight: 600 }}>
+              <span>🔴</span> 24/7 EMERGENCY RESPONSE AVAILABLE
+            </div>
+            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, lineHeight: 1.1, marginBottom: "1.5rem", color: "#f9fafb" }}>
+              Toronto's Most<br /><span style={{ color: gold }}>Trusted Pest Control</span><br />Experts
+            </h1>
+            <p style={{ fontSize: "1.1rem", color: "#9ca3af", lineHeight: 1.8, marginBottom: "2.5rem", maxWidth: "480px" }}>
+              Fast, safe & guaranteed pest removal for homes and businesses across the GTA.
+            </p>
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "3rem" }}>
+              <button onClick={() => document.getElementById("lead-form")?.scrollIntoView({ behavior: "smooth" })} style={{ background: `linear-gradient(135deg, ${gold}, #c4a855)`, color: "#0a0a0a", padding: "1rem 2rem", borderRadius: "12px", fontWeight: 700, fontSize: "1rem", border: "none", cursor: "pointer", boxShadow: `0 8px 32px rgba(232,201,122,0.35)` }}>
+                Get Free Inspection →
+              </button>
+              <a href={`tel:${PHONE}`} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", color: "#f9fafb", padding: "1rem 2rem", borderRadius: "12px", fontWeight: 700, fontSize: "1rem", textDecoration: "none" }}>
+                📞 Call Now
+              </a>
+            </div>
+            <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
+              {["✓ Licensed & Insured", "✓ Same-Day Service", "✓ Guaranteed Results"].map(b => (
+                <span key={b} style={{ fontSize: "0.85rem", color: "#6b7280" }}><span style={{ color: gold }}>✓</span>{b.slice(1)}</span>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <div style={{ position: "relative", width: "420px", height: "420px" }}>
+              <div style={{ position: "absolute", inset: 0, background: `conic-gradient(from 0deg, ${gold}22, transparent, ${gold}22)`, borderRadius: "50%", animation: "spin 20s linear infinite" }} />
+              <div style={{ position: "absolute", inset: "20px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(232,201,122,0.2)", borderRadius: "50%", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "1rem" }}>
+                <div style={{ fontSize: "6rem" }}>🛡️</div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.5rem", fontWeight: 800, color: gold }}>SHIELD</div>
+                  <div style={{ fontSize: "0.8rem", color: "#6b7280", letterSpacing: "0.2em" }}>PEST PROTECTION</div>
+                </div>
+              </div>
+              <div style={{ position: "absolute", top: "10%", right: "-20%", background: "rgba(15,15,20,0.9)", border: "1px solid rgba(232,201,122,0.3)", borderRadius: "12px", padding: "0.75rem 1rem", backdropFilter: "blur(10px)", fontSize: "0.85rem", fontWeight: 600, color: "#f9fafb", animation: "float 3s ease-in-out infinite" }}>
+                ⭐ 4.9/5 Google Rating
+              </div>
+              <div style={{ position: "absolute", bottom: "15%", left: "-15%", background: "rgba(15,15,20,0.9)", border: "1px solid rgba(232,201,122,0.3)", borderRadius: "12px", padding: "0.75rem 1rem", backdropFilter: "blur(10px)", fontSize: "0.85rem", fontWeight: 600, color: "#f9fafb", animation: "float 3s ease-in-out 1.5s infinite" }}>
+                ✓ 12,000+ Homes Protected
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section ref={statsRef} style={{ background: "rgba(232,201,122,0.04)", borderTop: "1px solid rgba(232,201,122,0.1)", borderBottom: "1px solid rgba(232,201,122,0.1)" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+          {stats.map(s => {
+            const count = useCountUp(s.value, 1800, statsVisible);
+            return (
+              <div key={s.label} style={{ textAlign: "center", padding: "2rem 1rem" }}>
+                <div style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)", fontWeight: 800, color: gold, fontFamily: "'Playfair Display', serif", letterSpacing: "-1px" }}>{count.toLocaleString()}{s.suffix}</div>
+                <div style={{ fontSize: "0.95rem", color: "#9ca3af", marginTop: "0.5rem", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em" }}>{s.label}</div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* SERVICES */}
+      <section id="services" style={{ ...sectionStyle }}>
+        <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+          <div style={{ color: gold, fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>What We Treat</div>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 800, color: "#f9fafb", marginBottom: "1rem" }}>Comprehensive Pest Solutions</h2>
+          <p style={{ color: "#9ca3af", maxWidth: "560px", margin: "0 auto", lineHeight: 1.7 }}>From single-family homes to large commercial properties — click any service to learn more.</p>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem" }}>
+          {services.map(s => {
+            const [hovered, setHovered] = useState(false);
+            return (
+              <div key={s.name} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+                style={{ background: hovered ? "rgba(232,201,122,0.07)" : "rgba(255,255,255,0.03)", border: `1px solid ${hovered ? "rgba(232,201,122,0.4)" : "rgba(255,255,255,0.08)"}`, borderRadius: "16px", padding: "2rem", transition: "all 0.3s ease", transform: hovered ? "translateY(-4px)" : "none", cursor: "pointer", position: "relative", overflow: "hidden" }}
+                onClick={() => navigate("service", null, s.slug)}>
+                {hovered && <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 50% 0%, rgba(232,201,122,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />}
+                <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>{s.icon}</div>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#f9fafb", marginBottom: "0.75rem", fontFamily: "'Playfair Display', serif" }}>{s.name}</h3>
+                <p style={{ fontSize: "0.9rem", color: "#9ca3af", lineHeight: 1.7, marginBottom: "1.25rem" }}>{s.desc}</p>
+                <button style={{ background: "none", border: "1px solid rgba(232,201,122,0.4)", color: gold, padding: "0.5rem 1.25rem", borderRadius: "8px", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer" }}>
+                  Learn More →
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* WHY CHOOSE US */}
+      <section id="about" style={{ background: "rgba(255,255,255,0.015)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ ...sectionStyle }}>
+          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+            <div style={{ color: gold, fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>Why ShieldPest</div>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 800, color: "#f9fafb" }}>The Standard Others Don't Meet</h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
+            {features.map(f => (
+              <div key={f.title} style={{ display: "flex", gap: "1.25rem", alignItems: "flex-start" }}>
+                <div style={{ width: "52px", height: "52px", background: "rgba(232,201,122,0.1)", border: "1px solid rgba(232,201,122,0.2)", borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem", flexShrink: 0 }}>{f.icon}</div>
+                <div>
+                  <h3 style={{ fontWeight: 700, color: "#f9fafb", marginBottom: "0.4rem", fontSize: "1.05rem" }}>{f.title}</h3>
+                  <p style={{ color: "#9ca3af", fontSize: "0.9rem", lineHeight: 1.7 }}>{f.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PROCESS */}
+      <section style={{ ...sectionStyle }}>
+        <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+          <div style={{ color: gold, fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>How It Works</div>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 800, color: "#f9fafb" }}>Our 4-Step Process</h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "0" }}>
+          {[
+            { step: "01", title: "Inspection", desc: "A certified technician performs a thorough assessment to identify pest type, entry points, and severity." },
+            { step: "02", title: "Treatment Plan", desc: "We create a custom elimination strategy using the safest, most effective methods for your situation." },
+            { step: "03", title: "Elimination", desc: "Our technicians execute the treatment plan with precision, targeting pests at every lifecycle stage." },
+            { step: "04", title: "Prevention", desc: "We seal entry points, install monitoring, and schedule follow-ups to ensure pests never return." },
+          ].map((s, i) => (
+            <div key={s.step} style={{ padding: "2rem", borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none", position: "relative" }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "5rem", fontWeight: 800, color: "rgba(232,201,122,0.08)", lineHeight: 1, marginBottom: "-1.5rem" }}>{s.step}</div>
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <div style={{ width: "40px", height: "3px", background: gold, marginBottom: "1.25rem", borderRadius: "2px" }} />
+                <h3 style={{ fontWeight: 700, color: "#f9fafb", fontSize: "1.2rem", marginBottom: "0.75rem" }}>{s.title}</h3>
+                <p style={{ color: "#9ca3af", fontSize: "0.9rem", lineHeight: 1.7 }}>{s.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section id="reviews" style={{ background: "rgba(255,255,255,0.015)", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "6rem 0", overflow: "hidden" }}>
+        <div style={{ textAlign: "center", marginBottom: "3rem", padding: "0 1.5rem" }}>
+          <div style={{ color: gold, fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>What Clients Say</div>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 800, color: "#f9fafb" }}>4,800+ Five-Star Reviews</h2>
+        </div>
+        <div ref={carouselRef} style={{ display: "flex", gap: "1.5rem", padding: "1rem 1.5rem 2rem", overflowX: "scroll", scrollbarWidth: "none" }}>
+          {[...testimonials, ...testimonials].map((t, i) => <TestimonialCard key={i} {...t} />)}
+        </div>
+      </section>
+
+      {/* SERVICE AREAS */}
+      <section style={{ ...sectionStyle }}>
+        <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+          <div style={{ color: gold, fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>Coverage</div>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 800, color: "#f9fafb" }}>Serving the Entire GTA</h2>
+        </div>
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", padding: "3rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1.5rem" }}>
+          {["Toronto", "Mississauga", "Brampton", "Markham", "Vaughan", "North York", "Scarborough", "Etobicoke", "Pickering", "Ajax", "Oakville", "Burlington"].map(city => (
+            <div key={city} style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#9ca3af", fontSize: "0.95rem" }}>
+              <span style={{ color: gold, fontWeight: 700 }}>✓</span> {city}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" style={{ background: "rgba(255,255,255,0.015)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ ...sectionStyle, maxWidth: "800px" }}>
+          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+            <div style={{ color: gold, fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>FAQ</div>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 800, color: "#f9fafb" }}>Common Questions</h2>
+          </div>
+          {faqs.map(f => <FAQItem key={f.q} {...f} />)}
+        </div>
+      </section>
+
+      {/* LEAD FORM */}
+      <section id="lead-form" style={{ ...sectionStyle, maxWidth: "720px" }}>
+        <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+          <div style={{ color: gold, fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>Get Started</div>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 800, color: "#f9fafb", marginBottom: "1rem" }}>Get Your Free Pest Inspection Today</h2>
+          <p style={{ color: "#9ca3af", lineHeight: 1.7 }}>No obligation. A certified technician will contact you within 60 minutes.</p>
+        </div>
+        <LeadForm />
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{ background: "#030305", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "4rem 1.5rem 2rem" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "3rem", marginBottom: "3rem" }}>
+            <div>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.75rem", fontWeight: 800, color: gold, marginBottom: "1rem" }}>{BRAND}</div>
+              <p style={{ color: "#6b7280", fontSize: "0.9rem", lineHeight: 1.7, marginBottom: "1.5rem" }}>Toronto's most trusted pest control. Licensed, insured, and guaranteed since 2009.</p>
+              <a href={`tel:${PHONE}`} style={{ display: "inline-block", background: `linear-gradient(135deg, ${gold}, #c4a855)`, color: "#0a0a0a", padding: "0.75rem 1.5rem", borderRadius: "10px", fontWeight: 700, fontSize: "0.95rem", textDecoration: "none" }}>📞 Emergency Line</a>
+            </div>
+            <div>
+              <h4 style={{ color: "#f9fafb", fontWeight: 700, marginBottom: "1.25rem", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "0.1em" }}>Services</h4>
+              {services.slice(0, 5).map(s => (
+                <button key={s.slug} onClick={() => navigate("service", null, s.slug)} style={{ display: "block", background: "none", border: "none", color: "#6b7280", fontSize: "0.9rem", marginBottom: "0.6rem", cursor: "pointer", padding: 0, textAlign: "left" }}
+                  onMouseEnter={e => e.target.style.color = gold} onMouseLeave={e => e.target.style.color = "#6b7280"}>
+                  {s.name}
+                </button>
+              ))}
+            </div>
+            <div>
+              <h4 style={{ color: "#f9fafb", fontWeight: 700, marginBottom: "1.25rem", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "0.1em" }}>Service Areas</h4>
+              {["Toronto", "Mississauga", "Brampton", "Markham", "Vaughan", "Scarborough"].map(c => (
+                <div key={c} style={{ color: "#6b7280", fontSize: "0.9rem", marginBottom: "0.6rem" }}>{c}</div>
+              ))}
+            </div>
+            <div>
+              <h4 style={{ color: "#f9fafb", fontWeight: 700, marginBottom: "1.25rem", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "0.1em" }}>Contact</h4>
+              <div style={{ color: "#6b7280", fontSize: "0.9rem", marginBottom: "0.75rem" }}>📞 {PHONE}</div>
+              <div style={{ color: "#6b7280", fontSize: "0.9rem", marginBottom: "0.75rem" }}>✉️ {EMAIL}</div>
+              <div style={{ color: "#6b7280", fontSize: "0.9rem", marginBottom: "1.5rem" }}>🕐 24/7 Emergency Service</div>
+            </div>
+          </div>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+            <div style={{ color: "#4b5563", fontSize: "0.85rem" }}>© 2025 {BRAND}. All rights reserved.</div>
+            <div style={{ display: "flex", gap: "1.5rem" }}>
+              {["Privacy Policy", "Terms of Service", "Sitemap"].map(l => (
+                <span key={l} style={{ color: "#4b5563", fontSize: "0.85rem", cursor: "pointer" }}>{l}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </footer>
+    </>
+  );
+}
+
+/* ─── ROUTER / ROOT ──────────────────────────────────── */
+export default function App() {
+  const [page, setPage] = useState("home");
+  const [serviceSlug, setServiceSlug] = useState(null);
+
+  const navigate = (target, anchor, slug) => {
+    setPage(target);
+    if (slug) setServiceSlug(slug);
+    if (anchor) {
+      setTimeout(() => {
+        document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const currentService = services.find(s => s.slug === serviceSlug);
+
+  return (
+    <div style={{ background: darkBg, color: "#f9fafb", fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif", minHeight: "100vh", overflowX: "hidden" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      <Nav navigate={navigate} currentPage={page} />
+      <FloatingButtons navigate={navigate} />
+      {page === "home" && <HomePage navigate={navigate} />}
+      {page === "service" && currentService && <ServicePage service={currentService} navigate={navigate} />}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
